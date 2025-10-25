@@ -13,6 +13,7 @@ const expenseItems = document.getElementById('expense-items');
 let totalIncome = 0;
 let totalExpenses = 0;
 let expenses = []; // guardará objetos {name, amount, date}
+const STORAGE_KEY = 'presupuestoData';
 
 // logica del formulario
 
@@ -37,21 +38,31 @@ function validateForm() {
 }
 
 function updateSummary() {
-  displayIncome.textContent = totalIncome;
-  displayExpenses.textContent = totalExpenses;
-  displayBalance.textContent = totalIncome - totalExpenses;
+  displayIncome.textContent = totalIncome.toFixed(2);
+  displayExpenses.textContent = totalExpenses.toFixed(2);
+  displayBalance.textContent = (totalIncome - totalExpenses).toFixed(2);
 }
 
-function addExpense(name, amount) {
+function addExpense(name, amount, dateISO) {
   const li = document.createElement('li');
   li.classList.add('p-2', 'bg-gray-100', 'rounded-lg', 'flex', 'justify-between', 'items-center');
 
   const left = document.createElement('div');
-  left.innerHTML = `<strong>${name}</strong><div class="text-sm text-gray-600">${amount.toFixed(2)}</div>`;
+
+  left.innerHTML = `<strong>${name}</strong><div class="text-sm text-gray-600">$${amount.toFixed(2)}</div>`;
 
   const right = document.createElement('div');
   right.classList.add('text-sm', 'text-gray-500');
-  right.textContent = new Date().toLocaleDateString();
+  // mostrar la fecha real del gasto si se proporcionó
+  if (dateISO) {
+    try {
+      right.textContent = new Date(dateISO).toLocaleDateString();
+    } catch (e) {
+      right.textContent = dateISO;
+    }
+  } else {
+    right.textContent = new Date().toLocaleDateString();
+  }
 
   li.appendChild(left);
   li.appendChild(right);
@@ -73,22 +84,29 @@ budgetForm.addEventListener('submit', function(e) {
   // Fecha del gasto (editable) — si no se provee, usar hoy
   let expenseDate = expenseDateInput && expenseDateInput.value ? new Date(expenseDateInput.value) : new Date();
 
-  // Guardamos el ingreso si es la primera vez
+  // Guardamos el ingreso si es la primera vez (o actualizar si cambió)
   if (totalIncome === 0) {
     totalIncome = income;
+  } else {
+    // si el usuario ingresó un nuevo valor de income, respetarlo
+    if (!isNaN(income) && income > 0) totalIncome = income;
   }
 
   // Sumamos el gasto
   totalExpenses += expenseAmount;
 
   // Guardar gasto con fecha
-  expenses.push({ name: expenseName, amount: expenseAmount, date: expenseDate.toISOString() });
+  const iso = expenseDate.toISOString();
+  expenses.push({ name: expenseName, amount: expenseAmount, date: iso });
 
   // Actualizamos el resumen
   updateSummary();
 
-  // Agregamos el gasto a la lista
-  addExpense(expenseName, expenseAmount);
+  // Agregamos el gasto a la lista (mostrando su fecha)
+  addExpense(expenseName, expenseAmount, iso);
+
+  // Persistir datos
+  saveData();
 
   // Limpiamos los campos de gasto
   expenseNameInput.value = '';
@@ -103,4 +121,51 @@ budgetForm.addEventListener('submit', function(e) {
   if (expenseDateInput) {
     expenseDateInput.value = new Date().toISOString().split('T')[0];
   }
+  // Cargar datos guardados (si los hay)
+  loadData();
 })();
+
+function saveData() {
+  const data = {
+    month: monthInput.value.trim(),
+    totalIncome,
+    expenses
+  };
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  } catch (e) {
+    console.error('No se pudo guardar en localStorage', e);
+  }
+}
+
+function loadData() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    if (!data) return;
+
+    if (data.month) monthInput.value = data.month;
+    if (typeof data.totalIncome === 'number') {
+      totalIncome = data.totalIncome;
+      incomeInput.value = totalIncome;
+    }
+    if (Array.isArray(data.expenses)) {
+      expenses = data.expenses;
+      // recalcular totalExpenses
+      totalExpenses = expenses.reduce((s, it) => s + (parseFloat(it.amount) || 0), 0);
+      // renderizar gastos
+      renderExpenses();
+    }
+    updateSummary();
+  } catch (e) {
+    console.error('Error cargando datos de localStorage', e);
+  }
+}
+
+function renderExpenses() {
+  expenseItems.innerHTML = '';
+  expenses.forEach(it => {
+    addExpense(it.name, parseFloat(it.amount), it.date);
+  });
+}
