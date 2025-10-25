@@ -12,7 +12,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Control de Presupuesto</title>
-  <script src="app.js" defer></script>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.3.2/dist/tailwind.min.css" rel="stylesheet">
 </head>
 
@@ -81,19 +80,6 @@
   </main>
 
 </body>
-<script>
-  (function(){
-    // Cargar js/app.js sólo si existe la sección principal del formulario
-    if (document.querySelector('#form-section')) {
-      const s = document.createElement('script');
-      s.src = 'js/app.js';
-      s.defer = true;
-      document.body.appendChild(s);
-    } else {
-      // Si necesitas cargarlo siempre, cambia la condición o elimina este bloque
-      // console.log('No se cargó js/app.js: no existe #form-section');
-    }
-  })();
-</script>
+<script src="js/app.js" defer></script>
 </html>
 
