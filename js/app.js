@@ -9,6 +9,8 @@ const displayIncome = document.getElementById('display-income');
 const displayExpenses = document.getElementById('display-expenses');
 const displayBalance = document.getElementById('display-balance');
 const expenseItems = document.getElementById('expense-items');
+const headerMonth = document.getElementById('header-month');
+const headerBudget = document.getElementById('header-budget');
 
 let totalIncome = 0;
 let totalExpenses = 0;
@@ -45,27 +47,43 @@ function updateSummary() {
 
 function addExpense(name, amount, dateISO) {
   const li = document.createElement('li');
-  li.classList.add('p-2', 'bg-gray-100', 'rounded-lg', 'flex', 'justify-between', 'items-center');
+  li.classList.add('p-2', 'bg-gray-100', 'rounded-lg');
 
-  const left = document.createElement('div');
+  const info = document.createElement('div');
+  info.innerHTML = `<strong>${name}</strong><div class="text-sm text-gray-600">$${amount.toFixed(2)}</div>`;
 
-  left.innerHTML = `<strong>${name}</strong><div class="text-sm text-gray-600">$${amount.toFixed(2)}</div>`;
+  const meta = document.createElement('div');
+  meta.classList.add('flex', 'items-center', 'gap-3');
 
-  const right = document.createElement('div');
-  right.classList.add('text-sm', 'text-gray-500');
-  // mostrar la fecha real del gasto si se proporcionó
+  const dateDiv = document.createElement('div');
+  dateDiv.classList.add('text-sm', 'text-gray-500');
   if (dateISO) {
-    try {
-      right.textContent = new Date(dateISO).toLocaleDateString();
-    } catch (e) {
-      right.textContent = dateISO;
-    }
+    try { dateDiv.textContent = new Date(dateISO).toLocaleDateString(); } catch(e) { dateDiv.textContent = dateISO; }
   } else {
-    right.textContent = new Date().toLocaleDateString();
+    dateDiv.textContent = new Date().toLocaleDateString();
   }
 
-  li.appendChild(left);
-  li.appendChild(right);
+  // botones editar / eliminar
+  const editBtn = document.createElement('button');
+  editBtn.classList.add('text-blue-600', 'underline', 'text-sm');
+  editBtn.textContent = 'Editar';
+  editBtn.addEventListener('click', () => editExpenseByElement(li.dataset.id));
+
+  const delBtn = document.createElement('button');
+  delBtn.classList.add('text-red-600', 'underline', 'text-sm');
+  delBtn.textContent = 'Eliminar';
+  delBtn.addEventListener('click', () => deleteExpenseByElement(li.dataset.id));
+
+  meta.appendChild(dateDiv);
+  meta.appendChild(editBtn);
+  meta.appendChild(delBtn);
+
+  li.appendChild(info);
+  li.appendChild(meta);
+  // asociar id (si hay) para operaciones; si no, se hará cuando se renderice desde data
+  if (dateISO && typeof dateISO === 'string' && dateISO.startsWith('{')) {
+    // nothing
+  }
   expenseItems.appendChild(li);
 }
 
@@ -95,15 +113,16 @@ budgetForm.addEventListener('submit', function(e) {
   // Sumamos el gasto
   totalExpenses += expenseAmount;
 
-  // Guardar gasto con fecha
+  // Guardar gasto con fecha y id
   const iso = expenseDate.toISOString();
-  expenses.push({ name: expenseName, amount: expenseAmount, date: iso });
+  const id = Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+  expenses.push({ id, name: expenseName, amount: expenseAmount, date: iso });
 
   // Actualizamos el resumen
   updateSummary();
 
   // Agregamos el gasto a la lista (mostrando su fecha)
-  addExpense(expenseName, expenseAmount, iso);
+  renderExpenses();
 
   // Persistir datos
   saveData();
@@ -113,6 +132,8 @@ budgetForm.addEventListener('submit', function(e) {
   expenseAmountInput.value = '';
   // reset fecha a hoy
   if (expenseDateInput) expenseDateInput.value = new Date().toISOString().split('T')[0];
+  // actualizar header presupuesto si cambió
+  renderHeader();
 });
 
 // Inicializar valores por defecto
@@ -166,6 +187,69 @@ function loadData() {
 function renderExpenses() {
   expenseItems.innerHTML = '';
   expenses.forEach(it => {
-    addExpense(it.name, parseFloat(it.amount), it.date);
+    const li = document.createElement('li');
+    li.classList.add('p-2', 'bg-gray-100', 'rounded-lg');
+    li.dataset.id = it.id;
+
+    const info = document.createElement('div');
+    info.innerHTML = `<strong>${it.name}</strong><div class="text-sm text-gray-600">$${parseFloat(it.amount).toFixed(2)}</div>`;
+
+    const meta = document.createElement('div');
+    meta.classList.add('flex', 'items-center', 'gap-3');
+
+    const dateDiv = document.createElement('div');
+    dateDiv.classList.add('text-sm', 'text-gray-500');
+    try { dateDiv.textContent = new Date(it.date).toLocaleDateString(); } catch(e) { dateDiv.textContent = it.date; }
+
+    const editBtn = document.createElement('button');
+    editBtn.classList.add('text-blue-600', 'underline', 'text-sm');
+    editBtn.textContent = 'Editar';
+    editBtn.addEventListener('click', () => editExpense(it.id));
+
+    const delBtn = document.createElement('button');
+    delBtn.classList.add('text-red-600', 'underline', 'text-sm');
+    delBtn.textContent = 'Eliminar';
+    delBtn.addEventListener('click', () => deleteExpense(it.id));
+
+    meta.appendChild(dateDiv);
+    meta.appendChild(editBtn);
+    meta.appendChild(delBtn);
+
+    li.appendChild(info);
+    li.appendChild(meta);
+    expenseItems.appendChild(li);
   });
+}
+
+function deleteExpense(id) {
+  const idx = expenses.findIndex(e => e.id === id);
+  if (idx === -1) return;
+  // ajustar totales
+  totalExpenses -= parseFloat(expenses[idx].amount) || 0;
+  expenses.splice(idx,1);
+  saveData();
+  renderExpenses();
+  updateSummary();
+  renderHeader();
+}
+
+function editExpense(id) {
+  const idx = expenses.findIndex(e => e.id === id);
+  if (idx === -1) return;
+  const it = expenses[idx];
+  // rellenar formulario con datos del gasto
+  expenseNameInput.value = it.name;
+  expenseAmountInput.value = it.amount;
+  try { expenseDateInput.value = new Date(it.date).toISOString().split('T')[0]; } catch(e) {}
+  // eliminar el registro original para que al enviar se reemplace
+  deleteExpense(id);
+}
+
+// helpers que usan dataset id cuando se crea con addExpense (compat)
+function deleteExpenseByElement(datasetId) { if (!datasetId) return; deleteExpense(datasetId); }
+function editExpenseByElement(datasetId) { if (!datasetId) return; editExpense(datasetId); }
+
+function renderHeader() {
+  if (headerMonth) headerMonth.textContent = monthInput.value ? `Mes: ${monthInput.value}` : '';
+  if (headerBudget) headerBudget.textContent = incomeInput.value ? `Presupuesto: $${parseFloat(incomeInput.value).toFixed(2)}` : '';
 }
