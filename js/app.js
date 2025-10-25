@@ -221,9 +221,28 @@ function renderExpenses() {
   });
 }
 
+// Toast helper
+function showToast(message, duration = 3000) {
+  const container = document.getElementById('toast-container');
+  if (!container) return;
+  const t = document.createElement('div');
+  t.className = 'bg-gray-800 text-white px-4 py-2 rounded shadow-lg opacity-0 transition-opacity duration-300';
+  t.textContent = message;
+  container.appendChild(t);
+  // force reflow then show
+  requestAnimationFrame(() => { t.classList.remove('opacity-0'); t.classList.add('opacity-100'); });
+  setTimeout(() => {
+    t.classList.remove('opacity-100');
+    t.classList.add('opacity-0');
+    setTimeout(() => container.removeChild(t), 300);
+  }, duration);
+}
+
 function deleteExpense(id) {
   const idx = expenses.findIndex(e => e.id === id);
   if (idx === -1) return;
+  // confirmar eliminación
+  if (!confirm('¿Seguro que deseas eliminar este gasto?')) return;
   // ajustar totales
   totalExpenses -= parseFloat(expenses[idx].amount) || 0;
   expenses.splice(idx,1);
@@ -231,6 +250,7 @@ function deleteExpense(id) {
   renderExpenses();
   updateSummary();
   renderHeader();
+  showToast('Gasto eliminado');
 }
 
 function editExpense(id) {
@@ -242,7 +262,13 @@ function editExpense(id) {
   expenseAmountInput.value = it.amount;
   try { expenseDateInput.value = new Date(it.date).toISOString().split('T')[0]; } catch(e) {}
   // eliminar el registro original para que al enviar se reemplace
-  deleteExpense(id);
+  // no pedir confirm al editar: eliminamos temporalmente sin confirmación
+  expenses.splice(idx,1);
+  totalExpenses -= parseFloat(it.amount) || 0;
+  renderExpenses();
+  updateSummary();
+  renderHeader();
+  showToast('Edita los campos y guarda el gasto');
 }
 
 // helpers que usan dataset id cuando se crea con addExpense (compat)
