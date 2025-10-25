@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Presupuesto Mensual</title>
+</head>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Control de Presupuesto</title>
+  <script src="app.js" defer></script>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.3.2/dist/tailwind.min.css" rel="stylesheet">
+</head>
+
+<body class="bg-gray-100 text-gray-800 min-h-screen">
+  <header class="bg-blue-600 text-white p-4 text-center text-2xl font-semibold">
+    Control de Presupuesto Mensual
+  </header>
+
+  <main class="max-w-3xl mx-auto mt-8 p-4 bg-white rounded-xl shadow-md">
+    <!-- Formulario de entrada -->
+    <section id="form-section" class="mb-6">
+      <h2 class="text-xl font-semibold mb-2 text-blue-700">Datos del mes</h2>
+      <form id="budget-form" class="space-y-4">
+        <div>
+          <label for="month" class="block text-sm font-medium">Mes</label>
+          <input type="text" id="month" placeholder="Ej. Octubre" class="w-full border rounded-lg p-2">
+        </div>
+
+        <div>
+          <label for="income" class="block text-sm font-medium">Presupuesto (Ingreso total)</label>
+          <input type="number" id="income" placeholder="Ej. 50000" class="w-full border rounded-lg p-2">
+        </div>
+
+        <div>
+          <label for="expense-name" class="block text-sm font-medium">Nombre del gasto</label>
+          <input type="text" id="expense-name" placeholder="Ej. Comida" class="w-full border rounded-lg p-2">
+        </div>
+
+        <div>
+          <label for="expense-amount" class="block text-sm font-medium">Monto del gasto</label>
+          <input type="number" id="expense-amount" placeholder="Ej. 2000" class="w-full border rounded-lg p-2">
+        </div>
+
+        <button type="submit" class="bg-blue-600 text-white w-full py-2 rounded-lg hover:bg-blue-700">
+          Agregar Gasto
+        </button>
+      </form>
+    </section>
+
+    <!-- Resumen general -->
+    <section id="summary" class="mb-6">
+      <h2 class="text-xl font-semibold mb-2 text-blue-700">Resumen</h2>
+      <div class="grid grid-cols-3 gap-4 text-center">
+        <div class="p-3 bg-green-100 rounded-lg">
+          <h3 class="font-medium">Presupuesto</h3>
+          <p id="display-income" class="text-lg font-bold">0</p>
+        </div>
+        <div class="p-3 bg-red-100 rounded-lg">
+          <h3 class="font-medium">Gastos</h3>
+          <p id="display-expenses" class="text-lg font-bold">0</p>
+        </div>
+        <div class="p-3 bg-blue-100 rounded-lg">
+          <h3 class="font-medium">Disponible</h3>
+          <p id="display-balance" class="text-lg font-bold">0</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Lista de gastos -->
+    <section id="expenses-list">
+      <h2 class="text-xl font-semibold mb-2 text-blue-700">Lista de Gastos</h2>
+      <ul id="expense-items" class="space-y-2">
+        <!-- Aquí se agregan los gastos dinámicamente -->
+      </ul>
+    </section>
+  </main>
+
+</body>
+<script src="/js/app.js"></script>
+</html>
+
