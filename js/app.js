@@ -4,6 +4,7 @@ const incomeInput = document.getElementById('income');
 const expenseNameInput = document.getElementById('expense-name');
 const expenseAmountInput = document.getElementById('expense-amount');
 const expenseDateInput = document.getElementById('expense-date');
+const saveConfigBtn = document.getElementById('save-config');
 
 const displayIncome = document.getElementById('display-income');
 const displayExpenses = document.getElementById('display-expenses');
@@ -137,6 +138,21 @@ budgetForm.addEventListener('submit', function(e) {
   // actualizar header presupuesto si cambió
   renderHeader();
 });
+
+// Guardar configuración (mes + presupuesto) manualmente
+if (saveConfigBtn) {
+  saveConfigBtn.addEventListener('click', () => {
+    const month = monthInput.value.trim();
+    const income = parseFloat(incomeInput.value);
+    if (!month) { alert('Por favor ingresa el mes.'); return; }
+    if (isNaN(income) || income <= 0) { alert('Ingresa un presupuesto válido.'); return; }
+    totalIncome = income;
+    saveData();
+    updateSummary();
+    renderHeader();
+    showToast('Configuración guardada');
+  });
+}
 
 // Inicializar valores por defecto
 (function initDefaults(){
