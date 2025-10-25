@@ -81,6 +81,19 @@
   </main>
 
 </body>
-<script src="/js/app.js"></script>
+<script>
+  (function(){
+    // Cargar js/app.js sólo si existe la sección principal del formulario
+    if (document.querySelector('#form-section')) {
+      const s = document.createElement('script');
+      s.src = 'js/app.js';
+      s.defer = true;
+      document.body.appendChild(s);
+    } else {
+      // Si necesitas cargarlo siempre, cambia la condición o elimina este bloque
+      // console.log('No se cargó js/app.js: no existe #form-section');
+    }
+  })();
+</script>
 </html>
 
