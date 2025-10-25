@@ -126,6 +126,8 @@ budgetForm.addEventListener('submit', function(e) {
 
   // Persistir datos
   saveData();
+  // Mostrar notificación de éxito al agregar
+  showToast('Gasto agregado');
 
   // Limpiamos los campos de gasto
   expenseNameInput.value = '';
